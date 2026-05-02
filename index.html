@@ -1,1 +1,265 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GFIRST Car Diagnosis SOP</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#0b0f14;
+  --card:#121821;
+  --accent:#00b0ff;
+  --yes:#00e676;
+  --no:#ff3d57;
+  --text:#e6edf3;
+  --muted:#7b8a9a;
+  --border:#1f2733;
+}
+
+{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Rajdhani',sans-serif;
+}
+
+/ HEADER /
+header{
+  position:sticky;
+  top:0;
+  background:#0d1117;
+  border-bottom:1px solid var(--border);
+  padding:16px 20px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  z-index:100;
+}
+
+.logo{
+  width:38px;height:38px;
+  border:2px solid var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  border-radius:8px;
+}
+
+h1{
+  font-size:20px;
+  letter-spacing:2px;
+}
+h1 span{color:var(--accent)}
+
+.sub{
+  font-size:10px;
+  color:var(--muted);
+  font-family:'Inter',sans-serif;
+}
+
+/ FLOW /
+.container{
+  padding:20px;
+  max-width:700px;
+  margin:auto;
+}
+
+.step{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:14px;
+  margin-bottom:16px;
+  transition:.2s;
+}
+
+.step:hover{
+  transform:translateY(-2px);
+  border-color:var(--accent);
+}
+
+.step-title{
+  font-size:15px;
+  margin-bottom:6px;
+}
+
+.step small{
+  color:var(--muted);
+  font-family:'Inter',sans-serif;
+  font-size:12px;
+}
+
+/ DECISION /
+.decision{
+  background:#1a1405;
+  border:1px solid #ffb300;
+}
+
+/ BUTTONS /
+.actions{
+  display:flex;
+  gap:10px;
+  margin-top:10px;
+}
+
+button{
+  flex:1;
+  padding:10px;
+  border:none;
+  border-radius:6px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.yes{background:var(--yes);color:#000}
+.no{background:var(--no);color:#fff}
+
+/ RESULT /
+.result{
+  display:none;
+  margin-top:10px;
+  padding:10px;
+  border-radius:6px;
+  font-size:13px;
+}
+
+.result.show{display:block}
+
+.ok{background:#002d1c;color:var(--yes)}
+.fail{background:#2d0008;color:var(--no)}
+
+/ MODAL */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.8);
+  display:none;
+  justify-content:center;
+  align-items:center;
+}
+
+.modal.active{display:flex}
+
+.modal-box{
+  background:#121821;
+  padding:20px;
+  border-radius:10px;
+  max-width:400px;
+}
+
+.close{
+  margin-top:10px;
+  background:var(--accent);
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">🔧</div>
+  <div>
+    <h1>GFIRST <span>DIAGNOSIS</span></h1>
+    <div class="sub">Vehicle SOP Flow</div>
+  </div>
+</header>
+
+<div class="container">
+
+<div class="step">
+  <div class="step-title">🚗 Start Diagnosis</div>
+  <small>Tap for guide</small>
+  <div class="actions">
+    <button onclick="openModal('Start with intake and inspection.')">?</button>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-title">📋 Record Customer Info</div>
+  <small>VIN · Mileage · Complaint</small>
+</div>
+
+<div class="step">
+  <div class="step-title">🔍 Visual Inspection</div>
+  <small>Leaks · Tyres · Damage</small>
+</div>
+
+<div class="step decision">
+  <div class="step-title">⚠️ Warning Lights?</div>
+  <div class="actions">
+    <button class="yes" onclick="showResult(this,'yes')">YES</button>
+    <button class="no" onclick="showResult(this,'no')">NO</button>
+  </div>
+  <div class="result ok">Scan with OBD-II</div>
+  <div class="result fail">Proceed manually</div>
+</div>
+
+<div class="step">
+  <div class="step-title">⚡ Battery Test</div>
+  <small>12.6V+ rest</small>
+</div>
+
+<div class="step decision">
+  <div class="step-title">Battery OK?</div>
+  <div class="actions">
+    <button class="yes" onclick="showResult(this,'yes')">YES</button>
+    <button class="no" onclick="showResult(this,'no')">NO</button>
+  </div>
+  <div class="result ok">Continue</div>
+  <div class="result fail">Replace battery</div>
+</div>
+
+<div class="step">
+  <div class="step-title">🛑 Brake Inspection</div>
+</div>
+
+<div class="step decision">
+  <div class="step-title">Brakes Safe?</div>
+  <div class="actions">
+    <button class="yes" onclick="showResult(this,'yes')">YES</button>
+    <button class="no" onclick="showResult(this,'no')">NO</button>
+  </div>
+  <div class="result ok">Proceed</div>
+  <div class="result fail">Repair brakes</div>
+</div>
+
+<div class="step">
+  <div class="step-title">📄 Final Report</div>
+</div>
+
+<div class="step">
+  <div class="step-title">✅ GFIRST Diagnosis Complete</div>
+</div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <div id="modalText"></div>
+    <button class="close" onclick="closeModal()">Close</button>
+  </div>
+</div>
+
+<script>
+function showResult(btn,type){
+  const parent = btn.closest('.decision');
+  parent.querySelectorAll('.result').forEach(r=>r.classList.remove('show'));
+  parent.querySelector('.'+(type==='yes'?'ok':'fail')).classList.add('show');
+}
+
+function openModal(text){
+  document.getElementById('modalText').innerText=text;
+  document.getElementById('modal').classList.add('active');
+}
+
+function closeModal(){
+  document.getElementById('modal').classList.remove('active');
+}
+</script>
+
+</body>
+</html>
