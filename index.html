@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GFIRST Car Diagnosis SOP</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&family=DM+Sans:wght@400;500&display=swap');
+
+:root {
+–bg: #0a0c10;
+–panel: #111418;
+–border: #1e2530;
+–yes: #00e676;
+–no: #ff3d57;
+–action: #ffb300;
+–start: #00b0ff;
+–text: #cfd8e3;
+–muted: #5a6a7a;
+–accent: #00b0ff;
+–node-bg: #161b22;
+–help: #b388ff;
+}
+
+- { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+background: var(–bg);
+color: var(–text);
+font-family: ‘Rajdhani’, sans-serif;
+min-height: 100vh;
+overflow-x: hidden;
+}
+
+body::before {
+content: ‘’;
+position: fixed;
+inset: 0;
+background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px);
+pointer-events: none;
+z-index: 500;
+}
+
+header {
+padding: 20px 28px 14px;
+border-bottom: 1px solid var(–border);
+display: flex;
+align-items: center;
+gap: 14px;
+background: linear-gradient(180deg, #0d1117 0%, transparent 100%);
+position: sticky; top: 0; z-index: 400;
+backdrop-filter: blur(10px);
+}
+.logo { width: 40px; height: 40px; border: 2px solid var(–accent); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+h1 { font-size: 24px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: #fff; }
+h1 span { color: var(–accent); }
+.sub { font-family: ‘Share Tech Mono’, monospace; font-size: 10px; color: var(–muted); letter-spacing: 2px; margin-top: 2px; }
+.help-badge { margin-left: auto; background: rgba(179,136,255,0.12); border: 1px solid rgba(179,136,255,0.35); color: var(–help); font-family: ‘Share Tech Mono’, monospace; font-size: 11px; padding: 5px 12px; border-radius: 20px; letter-spacing: 1px; white-space: nowrap; }
+
+.legend { display: flex; gap: 14px; padding: 10px 28px; background: var(–panel); border-bottom: 1px solid var(–border); flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; letter-spacing: 1px; }
+.dot { width: 10px; height: 10px; border-radius: 2px; }
+
+.flow-wrapper { padding: 28px 20px 80px; overflow-x: auto; }
+.flow { display: flex; flex-direction: column; align-items: center; gap: 0; min-width: 340px; max-width: 900px; margin: 0 auto; }
+
+.node { position: relative; width: 100%; max-width: 540px; border-radius: 6px; padding: 13px 18px; font-size: 15px; font-weight: 600; letter-spacing: 0.5px; text-align: center; z-index: 2; transition: transform 0.15s; }
+.node:hover { transform: translateY(-1px); }
+.node-start { background: linear-gradient(135deg,#003c56,#005f8a); border: 2px solid var(–start); color: var(–start); font-size: 16px; letter-spacing: 3px; text-transform: uppercase; box-shadow: 0 0 20px rgba(0,176,255,0.18); }
+.node-action { background: linear-gradient(135deg,#0d1f00,#162d00); border: 1.5px solid #4caf50; color: #a5d6a7; }
+.node-question { background: linear-gradient(135deg,#1a1200,#2a1e00); border: 2px solid var(–action); color: var(–action); clip-path: polygon(18px 0%,calc(100% - 18px) 0%,100% 50%,calc(100% - 18px) 100%,18px 100%,0% 50%); padding: 14px 44px; font-size: 14px; }
+.node-end-ok { background: linear-gradient(135deg,#003320,#005c38); border: 2px solid var(–yes); color: var(–yes); letter-spacing: 2px; text-transform: uppercase; box-shadow: 0 0 16px rgba(0,230,118,0.12); }
+.node-end-fail { background: linear-gradient(135deg,#2d0008,#520010); border: 2px solid var(–no); color: var(–no); letter-spacing: 2px; text-transform: uppercase; }
+.node-section { background: transparent; border: none; color: var(–muted); font-family: ‘Share Tech Mono’, monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; padding: 2px 0; cursor: default; max-width: 540px; }
+.node-section:hover { transform: none; }
+
+.step-num { position: absolute; top: -9px; left: -9px; width: 22px; height: 22px; border-radius: 50%; background: var(–accent); color: #000; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; font-family: ‘Share Tech Mono’, monospace; }
+.tip { font-size: 11px; color: var(–muted); font-family: ‘Share Tech Mono’, monospace; margin-top: 4px; display: block; font-weight: 400; }
+
+.help-btn { position: absolute; top: -9px; right: -9px; width: 26px; height: 26px; border-radius: 50%; background: rgba(179,136,255,0.15); border: 1.5px solid rgba(179,136,255,0.5); color: var(–help); font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; z-index: 10; font-family: ‘Share Tech Mono’, monospace; user-select: none; }
+.help-btn:hover { background: rgba(179,136,255,0.3); transform: scale(1.15); box-shadow: 0 0 12px rgba(179,136,255,0.4); }
+
+.connector { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 540px; }
+.line { width: 2px; height: 26px; background: var(–border); }
+.arrow-label { font-family: ‘Share Tech Mono’, monospace; font-size: 11px; letter-spacing: 2px; padding: 2px 10px; border-radius: 3px; font-weight: 700; }
+.label-then { background: rgba(255,179,0,0.08); color: var(–action); border: 1px solid rgba(255,179,0,0.2); }
+
+.branch-row { display: flex; width: 100%; max-width: 860px; gap: 16px; align-items: flex-start; }
+.branch-col { flex: 1; display: flex; flex-direction: column; align-items: center; }
+.branch-header { font-family: ‘Share Tech Mono’, monospace; font-size: 10px; letter-spacing: 2px; padding: 3px 12px; border-radius: 3px; font-weight: 700; margin-bottom: 3px; }
+.bh-yes { background: rgba(0,230,118,0.12); color: var(–yes); border: 1px solid rgba(0,230,118,0.25); }
+.bh-no  { background: rgba(255,61,87,0.12);  color: var(–no);  border: 1px solid rgba(255,61,87,0.25); }
+.bline { width: 2px; height: 14px; background: var(–border); }
+
+.branch-node { position: relative; width: 100%; border-radius: 6px; padding: 11px 14px; font-size: 13px; font-weight: 600; text-align: center; color: var(–text); }
+.bn-ok   { background: var(–node-bg); border: 1.5px solid #4caf50; }
+.bn-warn { background: var(–node-bg); border: 1.5px solid var(–action); color: var(–action); }
+.bn-fail { background: var(–node-bg); border: 1.5px solid var(–no); color: #ef9a9a; }
+.bn-info { background: var(–node-bg); border: 1.5px solid var(–border); }
+
+/* MODAL */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.78); z-index: 1000; align-items: center; justify-content: center; padding: 14px; backdrop-filter: blur(4px); }
+.modal-overlay.open { display: flex; }
+.modal { background: #0f1319; border: 1px solid rgba(179,136,255,0.3); border-radius: 12px; width: 100%; max-width: 620px; max-height: 88vh; overflow-y: auto; box-shadow: 0 0 60px rgba(179,136,255,0.1), 0 20px 60px rgba(0,0,0,0.6); animation: slideUp 0.2s ease; }
+@keyframes slideUp { from { opacity:0; transform:translateY(20px);} to {opacity:1; transform:translateY(0);} }
+.modal-header { padding: 18px 20px 12px; border-bottom: 1px solid var(–border); display: flex; align-items: flex-start; gap: 12px; position: sticky; top: 0; background: #0f1319; z-index: 2; border-radius: 12px 12px 0 0; }
+.modal-icon { font-size: 26px; flex-shrink: 0; margin-top: 2px; }
+.modal-title { font-size: 18px; font-weight: 700; color: #fff; letter-spacing: 1px; line-height: 1.2; }
+.modal-subtitle { font-family: ‘Share Tech Mono’, monospace; font-size: 10px; color: var(–help); letter-spacing: 2px; margin-top: 3px; }
+.modal-close { margin-left: auto; width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.07); border: 1px solid var(–border); color: var(–muted); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0; }
+.modal-close:hover { background: rgba(255,61,87,0.15); color: var(–no); border-color: var(–no); }
+.modal-body { padding: 16px 20px 24px; }
+
+.newbie-alert { background: rgba(179,136,255,0.08); border: 1px solid rgba(179,136,255,0.25); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-family: ‘DM Sans’, sans-serif; font-size: 13px; color: #ce93d8; display: flex; gap: 8px; align-items: flex-start; }
+.section-label { font-family: ‘Share Tech Mono’, monospace; font-size: 10px; letter-spacing: 2px; color: var(–muted); text-transform: uppercase; margin-bottom: 8px; }
+.tools-section { margin-bottom: 16px; }
+.tools-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.tool-tag { background: rgba(0,176,255,0.08); border: 1px solid rgba(0,176,255,0.2); color: var(–accent); font-size: 12px; font-family: ‘Share Tech Mono’, monospace; padding: 3px 10px; border-radius: 4px; }
+
+.steps-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.step-item { display: flex; gap: 12px; align-items: flex-start; background: rgba(255,255,255,0.03); border: 1px solid var(–border); border-radius: 8px; padding: 11px 13px; font-family: ‘DM Sans’, sans-serif; transition: border-color 0.15s, background 0.15s; }
+.step-item:hover { border-color: rgba(179,136,255,0.25); background: rgba(179,136,255,0.04); }
+.step-circle { width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; background: rgba(179,136,255,0.15); border: 1.5px solid rgba(179,136,255,0.4); color: var(–help); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; font-family: ‘Share Tech Mono’, monospace; }
+.step-content { flex: 1; }
+.step-title { font-size: 14px; font-weight: 600; color: #e8eaf0; margin-bottom: 3px; }
+.step-desc { font-size: 13px; color: #8a9bb0; line-height: 1.55; }
+.step-warn { margin-top: 6px; font-size: 12px; color: #ffcc80; background: rgba(255,179,0,0.08); border-left: 2px solid var(–action); padding: 4px 8px; border-radius: 0 4px 4px 0; }
+.step-tip  { margin-top: 6px; font-size: 12px; color: #80cbc4; background: rgba(0,200,180,0.07); border-left: 2px solid #26a69a; padding: 4px 8px; border-radius: 0 4px 4px 0; }
+
+.spec-box { margin-top: 16px; background: rgba(0,0,0,0.3); border: 1px solid var(–border); border-radius: 8px; padding: 12px 14px; }
+.spec-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; font-family: ‘DM Sans’, sans-serif; }
+.spec-row:last-child { border: none; }
+.spec-key { color: var(–muted); }
+.spec-val { color: var(–yes); font-family: ‘Share Tech Mono’, monospace; font-size: 12px; }
+
+footer { border-top: 1px solid var(–border); padding: 14px 28px; font-family: ‘Share Tech Mono’, monospace; font-size: 10px; color: var(–muted); letter-spacing: 1px; text-align: center; }
+</style>
+
+</head>
+<body>
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal" id="modalBox">
+    <div class="modal-header">
+      <div class="modal-icon" id="mIcon">🔧</div>
+      <div>
+        <div class="modal-title" id="mTitle">Task Guide</div>
+        <div class="modal-subtitle">STEP-BY-STEP · NEW TECHNICIAN GUIDE</div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="mBody"></div>
+  </div>
+</div>
+
+<header>
+  <div class="logo">🔧</div>
+  <div>
+    <h1>Car <span>Diagnosis</span> SOP</h1>
+    <div class="sub">Standard Operating Procedure · Full Vehicle Diagnostic Flowchart</div>
+  </div>
+  <div class="help-badge">? = Step Guide</div>
+</header>
+
+<div class="legend">
+  <div class="legend-item"><div class="dot" style="background:var(--start)"></div> Start/End</div>
+  <div class="legend-item"><div class="dot" style="background:var(--action)"></div> Decision</div>
+  <div class="legend-item"><div class="dot" style="background:#4caf50"></div> Action</div>
+  <div class="legend-item"><div class="dot" style="background:var(--yes)"></div> YES</div>
+  <div class="legend-item"><div class="dot" style="background:var(--no)"></div> NO</div>
+  <div class="legend-item"><div class="dot" style="background:var(--help)"></div> ? Help</div>
+</div>
+
+<div class="flow-wrapper">
+<div class="flow">
+
+  <div class="node node-start" style="position:relative">🚗 Begin Vehicle Diagnosis<button class="help-btn" onclick="showHelp('start')">?</button></div>
+  <div class="connector"><div class="line"></div><div class="arrow-label label-then">STEP 1</div><div class="line"></div></div>
+
+  <div class="node node-section">Phase 1 · Customer Intake</div>
+  <div class="node node-action" style="position:relative">
+    <span class="step-num">1</span>📋 Record Customer Complaint &amp; Vehicle Info
+    <span class="tip">Make · Model · Year · VIN · Mileage · Complaint</span>
+    <button class="help-btn" onclick="showHelp('intake')">?</button>
+  </div>
+  <div class="connector"><div class="line"></div><div class="arrow-label label-then">↓</div><div class="line"></div></div>
+
+  <div class="node node-action" style="position:relative">
+    <span class="step-num">2</span>🔍 Perform Visual Walk-Around Inspection
+    <span class="tip">Leaks · Damage · Tyres · Fluid levels · Lights</span>
+    <button class="help-btn" onclick="showHelp('walkaround')">?</button>
+  </div>
+  <div class="connector"><div class="line"></div><div class="arrow-label label-then">↓</div><div class="line"></div></div>
+
+  <div class="node node-question" style="position:relative">Any Warning Lights On Dashboard?<button class="help-btn" onclick="showHelp('warninglights')" style="top:-9px;right:28px">?</button></div>
+
+  <div class="branch-row">
+    <div class="branch-col">
+      <div class="bline"></div><div class="branch-header bh-yes">YES</div>
+      <div class="branch-node bn-ok" style="position:relative">🔌 Connect OBD-II Scanner · Read Codes<button class="help-btn" onclick="showHelp('obd')">?</button></div>
+      <div class="bline"></div>
+      <div class="branch-node bn-ok" style="position:relative">📝 Document All DTCs (P/B/C/U codes)<button class="help-btn" onclick="showHelp('dtc')">?</button></div>
+      <div class="bline"></div>
+      <div class="branch-node bn-warn" style="position:relative">Cross-reference TSBs &amp; service data<button class="help-btn" onclick="showHelp('tsb')">?</button></div>
+    </div>
+    <div class="branch-col">
+      <div class="bline"></div><div class="branch-header bh-no">NO</div>
+      <div class="branch-node bn-info">Proceed to symptom-based checks</div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="line" style="height:20px"></div><div class="arrow-label label-then">STEP 3 — Both paths merge</div><div class="line"></div></div>
+
+  <div class="node node-section">Phase 2 · Engine &amp; Starting System</div>
+  <div class="node node-action" style="position:relative">
+    <span class="step-num">3</span>⚡ Test Battery Voltage &amp; Load
+    <span class="tip">12.6V+ rest · 13.5–14.7V running</span>
+    <button class="help-btn" onclick="showHelp('battery')">?</button>
+  </div>
+  <div class="connector"><div class="line"></div></div>
+  <div class="node node-question" style="position:relative">Battery voltage / CCA within spec?<button class="help-btn" onclick="showHelp('batteryspec')" style="top:-9px;right:28px">?</button></div>
+
+  <div class="branch-row">
+    <div class="branch-col">
+      <div class="bline"></div><div class="branch-header bh-yes">YES</div>
+      <div class="branch-node bn-ok">Continue to starter &amp; alternator check</div>
+    </div>
+    <div class="branch-col">
+      <div class="bline"></div><div class="branch-header bh-no">NO</div>
+      <div class="branch-node bn-fail" style="position:relative">🔋 Replace / Charge Battery · Retest<button class="help-btn" onclick="showHelp('replacebattery')">?</button></div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="line" style="height:20px"></div><div class="arrow-label label-then">↓</div><div class="line"></div></div>
+
+  <div class="node node-action" style="position:relative">
+    <span class="step-num">4</span>🔑 Attempt Engine Start — Observe Behaviour
+    <span class="tip">Cranks? Misfires? Stalls? Rough idle? No start?</span>
+    <button class="help-btn" onclick="showHelp('enginestart')">?</button>
+  </div>
+  <div class="connector"><div class="line"></div></div>
+  <div class="node node-question" style="position:relative">Engine starts and idles smoothly?<button class="help-btn" onclick="showHelp('idlecheck')" style="top:-9px;right:28px">?</button></div>
+
+  <div class="branch-row">
+    <div class="branch-col">
+      <div class="bline"></div><div class="branch-header bh-yes">YES</div>
+      <div class="branch-node bn-ok">✅ Starting system OK — proceed</div>
+    </div>
+    <div class="branch-col">
+      <div class="bline"></div><div class="branch-header bh-no">NO</div>
+      <div class="branch-node bn-fail" style="position:relative">Check starter · Fuel · Spark plugs · Compression<button class="help-btn" onclick="showHelp('nostart')">?</button></div>
+      <div class="bline"></div>
+      <div class="branch-node bn-warn" style="position:relative">Run compression test per cylinder<button class="help-btn" onclick="showHelp('compression')">?</button></div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="line" style="height:20px"></div><div class="arrow-label label-then">STEP 5</div><div class="line"></div></div>
+
+  <div class="node node-section">Phase 3 · Cooling System</div>
+  <div class="node node-action" style="position:relative">
+    <span class="step-num">5</span>🌡️ Check Coolant Level, Colour &amp; Temperature
+    <span class="tip">Op temp: 85–105°C · Coolant: clear/green/pink</span>
+    <button class="help-btn" onclick="showHelp('coolant')">?</button>
+  </div>
+  <div class="connector"><div class="line"></div></div>
+  <div class="node node-question" style="position:relative">Overheating or coolant loss detected?<button class="help-btn" onclick="showHelp('overheat')" style="top:-9px;right:28px">?</button></div>
+
+  <div class="branch-row">
+    <div class="branch-col">
+      <div class="bline"></div><div class="branch-header bh-yes">YES</div>
+      <div class="branch-node bn-fail" style="position:relative">Pressure test · Thermostat · Radiator · Water pump · Head gasket<button class="help-btn" onclick="showHelp('coolingfault')">?</button></div>
+    </div>
+    <div class="branch-col">
+      <div class="bline"></div><div class="branch-header bh-no">NO</div>
+      <div class="branch-node bn-ok">✅ Cooling system OK</div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="line" style="height:20px"></div><div class="arrow-label label-then">STEP 6</div><div class="line"></div></div>
+
+  <div class="node node-section">Phase 4 · Brake System</div>
+  <div class="node node-action" style="position:relative">
+    <span class="step-num">6</span>🛑 Inspect Brake Pads, Rotors, Callipers &amp; Lines
+    <span class="tip">Pad min 3mm · No scoring · Fluid level · Pedal feel</span>
+    <button class="help-btn" onclick="showHelp('brakes')">?</button>
+  </div>
+  <div class="connector"><div class="line"></div></div>
+  <div class="node node-question" style="position:relative">Brakes pass visual &amp; pedal feel test?<button class="help-btn" onclick="showHelp('brakedecision')" style="top:-9px;right:28px">?</button></div>
+
+  <div class="branch-row">
+    <div class="branch-col">
+      <div class="bline"></div><div class="branch-header bh-yes">YES</div>
+      <div class="branch-node bn-ok">✅ Brake system OK</div>
+    </div>
+    <div class="branch-col">
+      <div class="bline"></div><div class="branch-header bh-no">NO</div>
+      <div class="branch-node bn-fail" style="position:relative">Replace pads/rotors · Bleed system · Repair lines<button class="help-btn" onclick="showHelp('brakerepair')">?</button></div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="line" style="height:20px"></div><div class="arrow-label label-then">STEP 7</div><div class="line"></div></div>
+
+  <div class="node node-section">Phase 5 · Transmission &amp; Drivetrain</div>
+  <div class="node node-action" style="position:relative">
+    <span class="step-num">7</span>⚙️ Check Trans Fluid Level / Condition &amp; Shift Quality
+    <span class="tip">Fluid: pink/clear · No burnt smell · Smooth shifts</span>
+    <button class="help-btn" onclick="showHelp('transmission')">?</button>
+  </div>
+  <div class="connector"><div class="line"></div></div>
+  <div class="node node-question" style="position:relative">Slipping, harsh shifts or unusual noise?<button class="help-btn" onclick="showHelp('transdecision')" style="top:-9px;right:28px">?</button></div>
+
+  <div class="branch-row">
+    <div class="branch-col">
+      <div class="bline"></div><div class="branch-header bh-yes">YES</div>
+      <div class="branch-node bn-fail" style="position:relative">Scan TCM · Solenoids · CVs · Road test<button class="help-btn" onclick="showHelp('transfault')">?</button></div>
+    </div>
+    <div class="branch-col">
+      <div class="bline"></div><div class="branch-header bh-no">NO</div>
+      <div class="branch-node bn-ok">✅ Transmission OK</div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="line" style="height:20px"></div><div class="arrow-label label-then">STEP 8</div><div class="line"></div></div>
+
+  <div class="node node-section">Phase 6 · Suspension, Steering &amp; Tyres</div>
+  <div class="node node-action" style="position:relative">
+    <span class="step-num">8</span>🔩 Inspect Shocks · Springs · Tie Rods · Ball Joints · Tyres
+    <span class="tip">Bounce test · Tyre tread &gt;2mm · Even wear</span>
+    <button class="help-btn" onclick="showHelp('suspension')">?</button>
+  </div>
+  <div class="connector"><div class="line"></div></div>
+  <div class="node node-question" style="position:relative">Vibration, pulling, uneven wear or play in steering?<button class="help-btn" onclick="showHelp('susdecision')" style="top:-9px;right:28px">?</button></div>
+
+  <div class="branch-row">
+    <div class="branch-col">
+      <div class="bline"></div><div class="branch-header bh-yes">YES</div>
+      <div class="branch-node bn-fail" style="position:relative">Replace worn parts · Alignment &amp; balance<button class="help-btn" onclick="showHelp('susfault')">?</button></div>
+    </div>
+    <div class="branch-col">
+      <div class="bline"></div><div class="branch-header bh-no">NO</div>
+      <div class="branch-node bn-ok">✅ Suspension &amp; Steering OK</div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="line" style="height:20px"></div><div class="arrow-label label-then">STEP 9</div><div class="line"></div></div>
+
+  <div class="node node-section">Phase 7 · Electrical &amp; HVAC</div>
+  <div class="node node-action" style="position:relative">
+    <span class="step-num">9</span>💡 Test Lights · Horn · Wipers · A/C · Heater · Windows
+    <span class="tip">Check fuses · Relay function · Compressor engagement</span>
+    <button class="help-btn" onclick="showHelp('electrical')">?</button>
+  </div>
+  <div class="connector"><div class="line"></div></div>
+  <div class="node node-question" style="position:relative">Any electrical or HVAC faults found?<button class="help-btn" onclick="showHelp('electricaldecision')" style="top:-9px;right:28px">?</button></div>
+
+  <div class="branch-row">
+    <div class="branch-col">
+      <div class="bline"></div><div class="branch-header bh-yes">YES</div>
+      <div class="branch-node bn-fail" style="position:relative">Trace wiring · Replace fuses/relays · Service A/C<button class="help-btn" onclick="showHelp('electricalfault')">?</button></div>
+    </div>
+    <div class="branch-col">
+      <div class="bline"></div><div class="branch-header bh-no">NO</div>
+      <div class="branch-node bn-ok">✅ Electrical &amp; HVAC OK</div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="line" style="height:20px"></div><div class="arrow-label label-then">STEP 10</div><div class="line"></div></div>
+
+  <div class="node node-section">Phase 8 · Road Test &amp; Final Check</div>
+  <div class="node node-action" style="position:relative">
+    <span class="step-num">10</span>🛣️ Perform Supervised Road Test
+    <span class="tip">Acceleration · Braking · Steering · All gears · NVH</span>
+    <button class="help-btn" onclick="showHelp('roadtest')">?</button>
+  </div>
+  <div class="connector"><div class="line"></div></div>
+  <div class="node node-question" style="position:relative">Any remaining fault or complaint reproduced?<button class="help-btn" onclick="showHelp('roadtestdecision')" style="top:-9px;right:28px">?</button></div>
+
+  <div class="branch-row">
+    <div class="branch-col">
+      <div class="bline"></div><div class="branch-header bh-yes">YES</div>
+      <div class="branch-node bn-warn" style="position:relative">⚠️ Return to relevant phase — re-diagnose<button class="help-btn" onclick="showHelp('rediagnose')">?</button></div>
+    </div>
+    <div class="branch-col">
+      <div class="bline"></div><div class="branch-header bh-no">NO</div>
+      <div class="branch-node bn-ok">All checks passed — proceed to report</div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="line" style="height:20px"></div><div class="arrow-label label-then">STEP 11</div><div class="line"></div></div>
+
+  <div class="node node-section">Phase 9 · Documentation &amp; Sign-Off</div>
+  <div class="node node-action" style="position:relative">
+    <span class="step-num">11</span>📄 Compile Diagnosis Report
+    <span class="tip">All faults · Work done · Parts replaced · Advisories</span>
+    <button class="help-btn" onclick="showHelp('report')">?</button>
+  </div>
+  <div class="connector"><div class="line"></div></div>
+  <div class="node node-question" style="position:relative">Safety-critical faults? (Brakes / Steering / Tyres)<button class="help-btn" onclick="showHelp('safetycheck')" style="top:-9px;right:28px">?</button></div>
+
+  <div class="branch-row">
+    <div class="branch-col">
+      <div class="bline"></div><div class="branch-header bh-yes">YES</div>
+      <div class="branch-node bn-fail" style="position:relative">🚨 Do NOT release — advise customer<button class="help-btn" onclick="showHelp('safetyhold')">?</button></div>
+    </div>
+    <div class="branch-col">
+      <div class="bline"></div><div class="branch-header bh-no">NO</div>
+      <div class="branch-node bn-ok" style="position:relative">Present report · Sign-off · Release<button class="help-btn" onclick="showHelp('release')">?</button></div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="line" style="height:20px"></div><div class="arrow-label label-then">↓</div><div class="line"></div></div>
+
+  <div class="node node-end-ok" style="position:relative">✅ Diagnosis Complete — Vehicle Cleared<button class="help-btn" onclick="showHelp('complete')">?</button></div>
+  <div class="connector"><div class="line"></div></div>
+  <div class="node node-end-fail" style="max-width:540px;font-size:13px;padding:10px 20px;opacity:0.8;position:relative">🚨 Unresolved fault — escalate to senior technician<button class="help-btn" onclick="showHelp('escalate')">?</button></div>
+
+</div>
+</div>
+
+<footer>GFIRST CAR DIAGNOSIS SOP · REV 2.0 · TAP ? ON ANY STEP FOR FULL GUIDANCE · SAFETY-CRITICAL ITEMS ALWAYS TAKE PRIORITY</footer>
+
+<script>
+const H = {
+  start:{icon:'🚗',title:'Starting a Vehicle Diagnosis',tools:['Job card / work order','Pen','PPE: safety glasses, gloves, steel-cap boots'],newbie:"Before touching anything, make sure you're wearing PPE: safety glasses, gloves if needed, and steel-capped boots. Never work under a vehicle without proper axle stands in place.",steps:[{title:'Prepare your workspace',desc:'Ensure the bay is clear, floor is dry, and all tools are nearby. Position the vehicle centrally in the bay.'},{title:'Open a job card',desc:'Every vehicle needs a job card (repair order). This is the official record of all work. Ask your supervisor which system to use.'},{title:'Introduce yourself to the customer',desc:'Be professional and polite. Ask "Can you describe the problem?" and "When did it start?" Listen carefully and write everything down.'},{title:'Do NOT operate the vehicle yet',desc:'Wait until you have completed the intake process and received authorisation from your supervisor.'}]},
+
+  intake:{icon:'📋',title:'Customer Complaint & Vehicle Info',tools:['Job card','Pen / tablet','VIN plate (door jamb or windscreen base)'],newbie:"Getting this right saves hours. The more detail you capture now, the easier the fault will be to find.",steps:[{title:'Record basic vehicle details',desc:'Write down: Make, Model, Year, Colour, Registration plate, VIN (17 characters), and current odometer reading.'},{title:'Find the VIN',desc:'Look on the driver-side door jamb sticker, the base of the windscreen (visible from outside), or the engine bay firewall.',tip:'VIN: first 3 = manufacturer, next 6 = vehicle type, last 8 = serial number.'},{title:"Record the complaint in the customer's own words",desc:'Write exactly what they say — e.g. "clunking noise from front left when going over bumps." Avoid paraphrasing.'},{title:'Ask clarifying questions',desc:'Ask: Does it happen all the time or sometimes? At what speed? Cold or warm engine? Any recent work done? Any lights on?'},{title:'Check service history',desc:'Look for a logbook in the glovebox. Note the last service date and mileage.'}],specs:[{k:'VIN length',v:'17 characters'},{k:'Record on',v:'Job card / system'}]},
+
+  walkaround:{icon:'🔍',title:'Visual Walk-Around Inspection',tools:['Torch','Gloves','Camera / phone for photos','Mirror on a stick (optional)'],newbie:"Always do this BEFORE moving the vehicle. Walk a full 360°. Crouch down and look underneath. This takes 5–10 minutes and can reveal obvious faults immediately.",steps:[{title:'Start at the front',desc:'Check headlights, bumper, bonnet alignment, and look for any fluid drips on the ground in front of the car.'},{title:'Check each tyre',desc:'Look for: flat spots, sidewall cracks, bulges, foreign objects (nails, glass), and uneven tread wear. Press the tread — should feel firm.'},{title:'Check underneath',desc:'Use your torch. Look for: oil drips (dark/black), coolant (green/pink), power steering fluid (clear yellow), or fuel (strong smell). Note the location of any drip.'},{title:'Check fluid levels under the bonnet',desc:'Engine COLD only. Check: oil dipstick, coolant reservoir, brake fluid, power steering fluid, washer fluid. All should be between MIN and MAX marks.',warn:"NEVER open a radiator cap on a warm or hot engine. It is pressurised — superheated coolant will spray out and cause severe burns."},{title:'Test all exterior lights',desc:'Turn ignition ON. Test headlights (dip and main), brake lights, indicators, reverse lights, and hazards. Use a wall or ask a colleague to check the rears.'},{title:'Photograph any existing damage',desc:'Take photos of any scratches, dents, or damage BEFORE you start work. Upload to the job card immediately. This protects you and the customer.',tip:'Do this every time — even for minor jobs.'}]},
+
+  warninglights:{icon:'⚠️',title:'Dashboard Warning Lights — What They Mean',tools:['OBD-II scanner','Vehicle owner manual or workshop software'],newbie:"Warning lights are the car's error messages. Red = serious, stop immediately. Amber = caution, book for service. Blue/Green = info only.",steps:[{title:'Identify the colour',desc:'Red = stop the engine now (oil pressure, temperature, battery). Amber/Yellow = caution, book in soon. Blue/Green = informational only.',warn:'A red oil pressure or temperature light means stop the engine IMMEDIATELY — continuing will cause irreparable engine damage.'},{title:'Identify the symbol',desc:'Common ones: Engine outline = check engine (ECU fault). Oil can = oil pressure. Thermometer = coolant temp. Battery = charging. ABS circle = antilock brakes. Airbag figure = SRS.'},{title:"Don't clear codes before reading them",desc:'Some people clear warning lights without reading them first — this destroys valuable evidence. Always scan and record before clearing anything.'},{title:'Check the owner manual',desc:"If you don't recognise a symbol, check the owner manual in the glovebox or use your workshop software to look it up."}]},
+
+  obd:{icon:'🔌',title:'Connecting an OBD-II Scanner',tools:['OBD-II scanner (e.g. Autel, Launch, Snap-on)','Vehicle ignition key'],newbie:"OBD-II is the standard diagnostic interface. Every petrol/diesel car built after 2001 (UK) has one. The scanner reads stored fault codes from the car's computer modules.",steps:[{title:'Locate the OBD-II port',desc:"A 16-pin trapezoid socket — usually under the driver's side dashboard near the steering column. Sometimes in the centre console or glovebox."},{title:'Turn ignition to position II (ON)',desc:"Turn key to position 2 — dashboard lights on, engine OFF. Keyless cars: press start button without pressing the brake pedal."},{title:'Plug in the scanner',desc:'Insert the OBD-II connector firmly. The scanner should power on automatically. If not, press the power button.'},{title:'Select vehicle or let it auto-detect',desc:'Most scanners auto-detect. If prompted, enter make/model/year from the job card.'},{title:'Select Scan All Systems',desc:'Choose the full system scan option — this checks all modules: engine, transmission, ABS, airbags, body, and HVAC.'},{title:'Wait for the scan to complete',desc:'Typically 1–3 minutes. Do not unplug or turn the ignition off during the scan.',tip:'Some scanners show live sensor data in real-time — very useful for intermittent faults.'}]},
+
+  dtc:{icon:'📝',title:'Understanding & Recording DTC Codes',tools:['Scanner printout or photo','Job card','Workshop software (ALLDATA / Haynes Pro)'],newbie:"DTC = Diagnostic Trouble Code. Think of it as the car's error log. The code identifies which system has a problem — not necessarily the exact broken part.",steps:[{title:'Understand the code format',desc:'First letter: P = Powertrain (engine/trans), B = Body, C = Chassis, U = Network. Second digit: 0 = generic (all makes), 1 = manufacturer-specific. E.g. P0301 = Cylinder 1 misfire.'},{title:'Write down every code',desc:'Record both the code number AND its description. E.g. "P0171 — System Too Lean (Bank 1)."'},{title:'Note whether codes are Active, Pending, or Historic',desc:'Active = fault happening now. Pending = occurred but not yet confirmed. Historic = happened in the past, may have self-cleared.'},{title:'Look up each code in service data',desc:'Never assume the faulty part from the code alone. P0301 (misfire cyl 1) could mean: plug, coil, injector, low compression, or a wiring fault.'},{title:"Do not clear codes yet",desc:'Leave codes stored until you have confirmed the fault and completed the repair. Clearing removes freeze-frame data — useful diagnostic evidence.',warn:'Clearing codes without repairing the fault will cause them to return. You will waste time re-scanning from scratch.'}]},
+
+  tsb:{icon:'📚',title:'Cross-Referencing TSBs & Service Data',tools:['ALLDATA / Haynes Pro / manufacturer portal','DTC list from scanner'],newbie:"A TSB (Technical Service Bulletin) is an official manufacturer notice about a known problem and its fix. Always check for TSBs first — the answer may already be written for you.",steps:[{title:"Log into your workshop's service data system",desc:'Common systems: ALLDATA, Haynes Pro, Autodata, or manufacturer portals (Toyota TechInfo, Ford ETIS, etc.). Ask your supervisor which one to use.'},{title:'Search by VIN or make/model/year + code',desc:'Enter the vehicle details and DTC. The system will display any relevant TSBs or service campaigns.'},{title:'Read the TSB carefully',desc:'It describes the symptom, root cause, and official repair procedure. Some TSBs are software updates (reflash) that fix the problem without replacing any parts.'},{title:'Note the TSB number on your job card',desc:'If you follow a TSB, reference its number in your notes. This is important for warranty claims.'},{title:'If no TSB exists, follow the diagnostic tree',desc:'The service manual has a step-by-step diagnostic chart for each code. Follow it in order — never skip steps.'}]},
+
+  battery:{icon:'⚡',title:'Testing Battery Voltage & Load',tools:['Digital multimeter OR battery load tester','Safety glasses','Gloves'],newbie:"The battery is the heart of the electrical system. A weak battery causes all sorts of strange faults — warning lights, no-start, and unusual electrical behaviour. Always test it first.",steps:[{title:'Engine OFF and rested 10+ minutes',desc:'This gives the true resting voltage. A surface charge from recent driving can give a falsely high reading.'},{title:'Set multimeter to DC Volts (20V range)',desc:'Red probe = positive (+) terminal. Black probe = negative (−) terminal.',warn:'Batteries produce hydrogen gas and contain sulphuric acid. No open flames nearby. Always wear gloves and glasses.'},{title:'Read the resting voltage',desc:'Touch red to + and black to −. Read the display.'},{title:'Interpret the reading',desc:'12.7V = fully charged. 12.4V = 75%. 12.0V = 25% (needs charging). Below 11.8V = likely faulty, needs replacement.'},{title:'Load test (if tester available)',desc:'Apply half the CCA rating for 15 seconds. If voltage drops below 9.6V = battery fails.'},{title:'Re-test with engine running',desc:'Should read 13.5–14.7V. This confirms the alternator is charging. Below 13.5V = possible alternator fault.'}],specs:[{k:'Resting voltage (good)',v:'12.6–12.7V'},{k:'Running (alternator ok)',v:'13.5–14.7V'},{k:'Load test fail below',v:'9.6V'}]},
+
+  batteryspec:{icon:'📊',title:'Battery Specification Guide',tools:['Battery spec label (on top of battery)'],newbie:"CCA = Cold Cranking Amps. This is the power the battery delivers at cold temperatures to start the engine. Replacement must meet or exceed the original CCA rating.",steps:[{title:"Find the battery's CCA rating",desc:"Printed on the battery label. Also in the owner manual. E.g. '600 CCA'."},{title:'Compare tester result to spec',desc:'Most load testers display GOOD/REPLACE automatically. Manual test: must hold above 9.6V at half the CCA load for 15 seconds.'},{title:'Check battery age',desc:'Most batteries last 3–5 years. Manufacture date often on a sticker (03/21 = March 2021). Beyond 5 years, recommend replacement even if it currently tests OK.'}],specs:[{k:'Battery lifespan',v:'3–5 years'},{k:'Load test min voltage',v:'9.6V'}]},
+
+  replacebattery:{icon:'🔋',title:'Replacing a Car Battery',tools:['10mm or 13mm spanner / socket','New battery (correct CCA & size)','Memory minder (optional)','Gloves & safety glasses'],newbie:"Disconnecting the battery on modern cars can reset the ECU, clock, and radio codes. A memory minder plugs into the OBD port to maintain power during the swap. Ask your supervisor if one is available.",steps:[{title:'Turn off all electrics and remove the key',desc:'Make sure the ignition is fully off. Wait 2 minutes.'},{title:'Disconnect the NEGATIVE (−) terminal first',desc:'Always negative first when removing, positive first when refitting. This prevents accidental sparks.',warn:"NEVER let a spanner bridge the positive terminal to bodywork — it will arc and can cause a fire or explosion."},{title:'Disconnect the positive (+) terminal',desc:'Wrap the disconnected positive cable in a rag so it cannot accidentally contact the battery or metal.'},{title:'Remove the battery clamp / hold-down',desc:'Usually a 10mm bolt at the base or front of the battery. Keep it for the new battery.'},{title:'Lift out the old battery',desc:'Batteries weigh 10–20kg. Lift with your legs, not your back. Do not tilt — acid can spill.'},{title:'Clean the tray and terminals',desc:'Use a wire brush on the clamps. Remove any white/blue corrosion. Bicarbonate of soda and water neutralises acid residue.'},{title:'Install and reconnect',desc:'Positive (+) first, then negative (−). Tighten firmly but do not overtighten — battery posts crack easily.'},{title:'Re-test and relearn if needed',desc:'Some vehicles (BMW, Mercedes, VAG group) require a battery registration procedure via the scanner after replacement. Check service data.'}]},
+
+  enginestart:{icon:'🔑',title:'Starting the Engine & Observing Behaviour',tools:['Job card','Your senses — ears, eyes, nose'],newbie:"This is where you listen and observe — not just turn the key and walk away. Stand beside the vehicle and pay attention to every sound and sensation for the first 30 seconds.",steps:[{title:'Ensure ventilation',desc:'Bay doors open or extraction fans running. Never start an engine in a fully enclosed space — exhaust fumes are lethal.'},{title:'Turn the key / press start and listen',desc:'Engine cranks normally and fires? Cranks slowly (weak battery)? Single click (bad connection)? Rapid clicking (flat battery)? No noise at all (immobiliser or ignition fault)?'},{title:'Watch the dashboard immediately',desc:'All warning lights should illuminate briefly then go out. Any that stay on — note them. Oil pressure light MUST go out within 2 seconds of starting.',warn:'If the oil pressure light stays on after startup — shut the engine off IMMEDIATELY. Running without oil pressure will destroy the engine within seconds.'},{title:'Listen for the first 30 seconds',desc:'Rattles = low oil or chain/belt issue. Misfires = irregular, lumpy sound. Squealing = belt or pulley. Hissing = vacuum or coolant leak. Ticking = top-end lubrication issue.'},{title:'Watch the exhaust smoke',desc:'White (cold start, cold weather) = normal. Persistent white = coolant burning (head gasket). Blue = oil burning. Black = running too rich (excess fuel).'},{title:'Observe the idle for 2–3 minutes',desc:'Should settle to a smooth, even RPM. Rough, hunting, or surging idle = fuelling, air, or sensor fault.'}]},
+
+  idlecheck:{icon:'📈',title:'Assessing Idle Quality',tools:['OBD-II scanner with live data'],newbie:"A healthy idle sits between 600–900 RPM and sounds smooth and consistent. Anything outside this range or that fluctuates needs investigating.",steps:[{title:'Check RPM on live data',desc:'Connect scanner. Select Live Data > Engine RPM. Watch for 2–3 minutes. Steady = good. Fluctuating = fault.'},{title:'Check misfire counters',desc:'Live data > Misfire Counter per cylinder. Any cylinder showing active misfires points to plug, coil, injector, or compression issue on that cylinder.'},{title:'Check fuel trims (STFT / LTFT)',desc:'Short Term and Long Term Fuel Trims show how much the ECU corrects the mixture. Above +10% or below −10% = air/fuel fault.'},{title:'Check MAF and O2 sensors',desc:'MAF should give a smooth proportional reading with RPM. O2 sensors should oscillate rapidly between low and high voltage on a healthy engine.'}],specs:[{k:'Normal idle RPM',v:'600–900 RPM'},{k:'Fuel trim tolerance',v:'±10%'}]},
+
+  nostart:{icon:'🔧',title:'No-Start Diagnosis: Systematic Approach',tools:['Multimeter','Fuel pressure gauge','Spark tester','OBD-II scanner'],newbie:"A no-start always comes down to three things: no spark, no fuel, or no compression. Check them in this exact order — it prevents replacing parts that are not the problem.",steps:[{title:'Confirm the engine cranks',desc:'Can you hear the starter motor spinning the engine? If yes, move to spark and fuel. If not, fix the battery/starter first.'},{title:'Check for spark',desc:'Remove one coil pack or HT lead. Attach a spark tester or old plug. Crank and look for a strong blue spark.',warn:'Hold the tester body only — never touch the HT lead while cranking. High voltage electric shock risk.'},{title:'Check fuel pump priming',desc:'Turn ignition ON (do not crank). You should hear a brief 2-second whirring from the fuel tank. Silence = check fuel pump fuse and relay first.'},{title:'Check fuel pressure',desc:'Attach a fuel pressure gauge to the Schrader valve on the fuel rail. Crank — pressure should build immediately. No pressure = fuel pump or fuse issue.'},{title:'Inspect spark plugs',desc:'Remove and examine all plugs. Black/sooty = rich or misfiring. White/blistered = lean or overheating. Wet with fuel = flooded engine.'},{title:'Proceed to compression test if spark and fuel confirmed',desc:'If both are present but still no start, the issue is mechanical — low compression, jumped timing chain, bent valves.'}]},
+
+  compression:{icon:'💪',title:'Performing a Compression Test',tools:['Compression tester (screw-in type)','Spark plug socket','Ratchet','Pen and paper','Engine oil (for wet test)'],newbie:"A compression test checks whether the engine's internal seals (pistons, rings, valves) are intact. Low compression = the engine cannot fire properly.",steps:[{title:'Warm the engine if possible',desc:'Warm engines give more accurate readings. If the car will not start, test cold and note this on your records.'},{title:'Disable the ignition system',desc:'Pull the main ignition fuse or disconnect all coil packs. This prevents the engine from starting or sparking during the test.'},{title:'Remove all spark plugs',desc:'Label each plug to its cylinder (1, 2, 3, 4). Compare condition and reinstall correctly after testing.'},{title:'Screw in the compression tester to cylinder 1',desc:'Thread in by hand until snug. Do not overtighten — the thread is in the aluminium cylinder head.'},{title:'Have someone crank the engine for 4–6 seconds',desc:'The gauge needle climbs as the engine cranks. Note the final reading. Reset the gauge (press release valve) before each cylinder.'},{title:'Record all readings and compare',desc:'Typical: 140–180 PSI (petrol). All cylinders must be within 10% of each other. One low cylinder = fault on that cylinder.'},{title:'Perform a wet test on any low cylinder',desc:'Squirt a small amount of clean engine oil into the low cylinder. Re-test. Pressure rises = worn piston rings. Stays the same = valve fault.',tip:'Always reinstall plugs, coils, and fuses fully after the test.'}],specs:[{k:'Typical compression (petrol)',v:'140–180 PSI'},{k:'Max variance between cylinders',v:'10%'}]},
+
+  coolant:{icon:'🌡️',title:'Checking the Cooling System',tools:['Coolant test strips or refractometer','Torch','Infrared thermometer (useful)'],newbie:"The cooling system keeps the engine at the right temperature. Checking it is simple but the safety rule is critical: NEVER open it when warm.",steps:[{title:'ALWAYS check when engine is COLD',desc:'Wait at least 30 minutes after the engine was last run.',warn:'Absolutely never open the radiator cap or reservoir on a warm or hot engine. It is pressurised — superheated coolant will spray and cause severe burns. This rule is non-negotiable.'},{title:'Check the coolant reservoir level',desc:'Look at the side of the translucent reservoir. Level should be between MIN and MAX. If low, top up with the correct type (check the reservoir cap or service data).'},{title:'Check coolant colour and condition',desc:'Good coolant: clean green, blue, pink, or red. Brown/rusty = degraded, needs a flush. Milky or creamy = oil mixing in = head gasket suspect. Oily sheen = same concern.'},{title:'Test the concentration',desc:'Use test strips or a refractometer. Should be approximately 50% antifreeze / 50% water, giving freeze protection to at least −35°C.'},{title:'Inspect hoses',desc:'Squeeze the top and bottom radiator hoses. Should be firm but pliable. Soft, spongy, or cracked = replace. Check for leaks at the jubilee clamps.'},{title:'Inspect the radiator',desc:'Look through the front grille. Fins should be clean and straight. Bent or blocked fins reduce airflow and cooling efficiency.'}],specs:[{k:'Normal operating temp',v:'85–105°C'},{k:'Coolant mix ratio',v:'50% antifreeze / 50% water'},{k:'Freeze protection min',v:'−35°C'}]},
+
+  overheat:{icon:'🔥',title:'Identifying Overheating',tools:['Dashboard temp gauge','OBD scanner live data','Infrared thermometer'],newbie:"Overheating is catastrophic for an engine. If the temperature gauge hits the red, stop the engine immediately — continuing even for 2 minutes can warp the cylinder head, costing thousands to repair.",steps:[{title:'Monitor the dashboard temp gauge',desc:'Needle should sit in the middle. Moving toward red or reaching maximum = overheating. Some vehicles only show a warning light.'},{title:'Check live data coolant temp (ECT)',desc:'Connect scanner > Live Data > Engine Coolant Temperature. Should be 85–105°C. Above 110°C = concern. Above 120°C = emergency.'},{title:'Look for steam from the bonnet',desc:'White steam (not exhaust smoke) from the bonnet area = coolant boiling and escaping. Stop immediately — do not continue driving.'},{title:'Check the reservoir for bubbling',desc:'With engine running, watch the reservoir carefully. Vigorous bubbling = combustion gases entering the coolant = head gasket failure suspect.'}],specs:[{k:'Normal ECT',v:'85–105°C'},{k:'Concern zone',v:'>110°C'},{k:'Emergency zone',v:'>120°C'}]},
+
+  coolingfault:{icon:'🔧',title:'Diagnosing Cooling System Faults',tools:['Cooling system pressure tester','Block tester (combustion gas detector)','Thermostat for replacement'],newbie:"Cooling faults range from simple (low coolant) to serious (head gasket). Work through them in order — the pressure test is your most important diagnostic tool.",steps:[{title:'Pressure test the system',desc:"Attach the pressure tester to the coolant filler. Pump to the cap's rated pressure (usually 13–16 PSI, marked on the cap). Watch for 5 minutes — pressure should hold. A drop = leak."},{title:'Locate the leak',desc:'With pressure applied, inspect all hoses, clamps, the radiator (look for dried green/pink residue), water pump, and thermostat housing. Feel for damp spots.'},{title:'Test the thermostat',desc:'Remove and place in water on a hob with a thermometer. Should open at its rated temp (usually 82–92°C). Stays closed = faulty. Replace with OEM spec.'},{title:'Block test for head gasket failure',desc:'Use a combustion gas block tester. Remove the radiator cap (cold engine), insert the tester, squeeze the bulb. Colour change from blue to yellow = combustion gases in coolant = head gasket fault.'},{title:'Check the water pump',desc:'With engine running, listen at the pump for grinding. Check for coolant weeping below the pump (leaves a crusty white/green residue). A faulty pump needs replacement.'}]},
+
+  brakes:{icon:'🛑',title:'Inspecting the Brake System',tools:['Trolley jack & axle stands','Wheel brace / impact gun','Brake pad thickness gauge or ruler','Torch','Micrometer (for disc thickness)'],newbie:"Brakes are the most safety-critical system on the car. Take your time and be thorough. If in doubt, raise it with your supervisor before releasing the vehicle.",steps:[{title:'Lift the vehicle on axle stands',desc:'Use the trolley jack at correct jacking points (check service data). Place axle stands before getting underneath. NEVER work under a vehicle supported only by a jack.',warn:'A vehicle falling from a jack is fatal. Axle stands are non-negotiable.'},{title:'Remove the wheel',desc:'Loosen wheel nuts half a turn each in a star pattern BEFORE lifting. Once lifted, remove fully. Place the wheel under the vehicle as extra safety.'},{title:'Inspect brake pad thickness',desc:'Look through the calliper at the pad pressed against the disc. Minimum 3mm of friction material. Below 2mm = replace immediately. Below 1mm = do not drive the vehicle.'},{title:'Inspect the brake disc (rotor)',desc:"Run your fingernail across the disc face — should feel smooth. Deep grooves, hard spots (blue/brown heat marks), cracks = disc replacement needed. Check minimum thickness stamped on the disc edge with a micrometer."},{title:'Check the calliper',desc:'Sliding callipers should move freely on their pins. Look for seized sliders, torn rubber dust boots, or brake fluid leaks from the piston seal.'},{title:'Check brake fluid',desc:'At the master cylinder reservoir under the bonnet. Between MIN and MAX lines. Dark brown = contaminated with moisture, replace the fluid. Clear to light gold = good.'},{title:'Test pedal feel',desc:'Sit in driver seat. Press brake pedal firmly. Should feel firm with about 1/3 travel before resistance. Spongy = air in system. Sinks to floor = serious leak or master cylinder fault.'}],specs:[{k:'Minimum pad thickness',v:'3mm (replace at 2mm)'},{k:'Brake fluid colour (good)',v:'Clear to light gold'}]},
+
+  brakedecision:{icon:'❓',title:'Pass or Fail — Brake Assessment Guide',tools:[],newbie:"Use these criteria to make your brake assessment call.",steps:[{title:'PASS criteria',desc:'Pads ≥ 3mm. Disc surface smooth with no deep grooves. Calliper slides freely, no leaks. Fluid clear and at correct level. Pedal firm and consistent. No ABS codes.'},{title:'FAIL criteria',desc:'Pads < 3mm. Disc has deep grooves, cracks, or severe heat damage. Calliper seized or leaking. Fluid contaminated or low. Pedal spongy or sinking.',warn:'A brake system failure is SAFETY CRITICAL. The vehicle must not leave the workshop until it is repaired. There are no exceptions.'}]},
+
+  brakerepair:{icon:'🔧',title:'Brake Pad & Disc Replacement',tools:['Calliper wind-back tool or C-clamp','Brake cleaner spray','Copper grease (anti-squeal)','Torque wrench','New pads & discs (axle pair)'],newbie:"Always replace as an axle pair — both sides together. Replacing one side only causes the car to pull dangerously to one side under braking.",steps:[{title:'Unbolt the calliper with wheel removed',desc:'Two bolts on the back of the calliper (usually 12–14mm). Hang the calliper with a wire hook — never let it hang by the brake hose.'},{title:'Remove the old pads',desc:'They clip or slide out of the calliper bracket. Note how they are oriented before removing.'},{title:'Remove the old disc',desc:'Usually two small cross-head screws plus the hub. If stuck, thread two bolts into the disc face holes and tighten evenly to push it off.'},{title:'Clean all surfaces with brake cleaner',desc:'Spray the hub face, calliper bracket, and slider pins. Dry with a rag. Avoid getting brake cleaner on rubber.'},{title:'Lubricate the correct points',desc:'Apply copper grease to: slider pin threads, the back of the pad (where it contacts the calliper bracket), and the hub where the disc seats.',warn:'NEVER get grease or oil on the disc face or pad friction material. Even a small amount reduces braking effectiveness dramatically.'},{title:'Wind back the calliper piston',desc:'Use a wind-back tool or C-clamp to retract the piston. Watch the brake fluid reservoir — it will rise. Have a rag ready. Some rear callipers require rotating while pressing — check service data.'},{title:'Install new disc, pads, and refit calliper',desc:'Torque all bolts to manufacturer specification (check service data). Refit wheel and torque wheel nuts in a star pattern to the correct spec.'},{title:'Bed in the new brakes before returning the vehicle',desc:'Move the car forward, apply firm brakes. Repeat 5 times to seat the pads against the new disc surface.'}]},
+
+  transmission:{icon:'⚙️',title:'Checking Transmission Fluid & Shift Quality',tools:['Dipstick (auto) or drain plug socket (manual)','Clean rag','Correct fluid type per service data'],newbie:"Transmission fluid is the gearbox's lifeblood. Always confirm the correct fluid type before topping up — wrong fluid can destroy a gearbox.",steps:[{title:'Identify the transmission type',desc:'Manual, Automatic, CVT, or DSG/PDK (dual-clutch). Each has its own fluid type and check procedure. Always consult service data first.'},{title:'Automatic with dipstick',desc:'Engine WARM and RUNNING in Park. Pull dipstick, wipe, reinsert, pull again. Level should be in the HOT zone. Fluid should be bright red/pink. Dark brown or burnt smell = serious concern.'},{title:'Sealed automatics (no dipstick)',desc:'These require a special procedure with a scan tool and temperature monitoring. Ask your supervisor — never attempt to check blind.'},{title:'Manual gearbox',desc:"Remove the oil level/filler plug on the side of the gearbox. Oil should be level with the bottom of the hole. If oil runs out when you remove the plug — it's full."},{title:'Assess shift quality from your engine start observation',desc:'Harsh shifts, slipping between gears, or shudder on take-off all indicate a fluid or mechanical issue. Note exactly which gear and what condition triggers the problem.'}],specs:[{k:'Auto fluid colour (healthy)',v:'Bright red/pink'},{k:'Auto fluid colour (faulty)',v:'Dark brown, burnt smell'}]},
+
+  transdecision:{icon:'❓',title:'Recognising Transmission Faults by Symptom',tools:[],newbie:"Transmission faults can be subtle. Match the symptom to the likely cause before you start inspecting.",steps:[{title:'Slipping',desc:"Engine revs rise but the car doesn't accelerate proportionally — like the clutch is slipping. Sluggish pull-away or hesitation."},{title:'Harsh or clunky shifts',desc:'Car jerks noticeably when changing gear, especially 1st to 2nd, or when coming to a stop from speed.'},{title:'Shudder on take-off',desc:'A vibration felt through the whole car when pulling away from a stop — often a fluid issue in a torque converter automatic.'},{title:'Unusual noises',desc:'Whining = bearing or pump. Clunking = worn mounts or CV joint. Grinding = mechanical damage. Any of these related to gear selection = transmission concern.'},{title:'Warning lights',desc:'Gearbox warning light or "Transmission Fault" message = scan the TCM (Transmission Control Module) immediately for fault codes.'}]},
+
+  transfault:{icon:'🔧',title:'Diagnosing Transmission Faults',tools:['OBD-II scanner with TCM access','Live data capability'],newbie:"Transmission repairs can be very expensive. Always scan for codes and explore simple solutions (fluid, software update) before recommending a rebuild or replacement.",steps:[{title:'Scan the TCM for fault codes',desc:'Connect scanner and scan ALL modules. Transmission codes are typically in the P07xx and P08xx range.'},{title:'Check for solenoid codes',desc:'Solenoids control fluid flow inside the gearbox. Many shift faults are solenoid-related (P0750–P0775 range) and can be repaired without a full rebuild.'},{title:'Check CV joints and driveshafts',desc:'On front-wheel drive: grab each CV shaft and rock it. Excessive play = worn CV joint. Clicking when turning on full lock = worn outer CV joint.'},{title:'Check transmission mounts',desc:"With the engine running, use a pry bar carefully to check the rubber mounts. Excessive movement = worn mount causing harsh engagement clunks."},{title:'Consult service data before going further',desc:'Internal gearbox work (clutch packs, valve body, torque converter) requires specialist training and tools. Report your findings to your supervisor.'}]},
+
+  suspension:{icon:'🔩',title:'Inspecting Suspension & Steering',tools:['Torch','Pry bar','Safety glasses','Axle stands','Assistant for play checks'],newbie:"Suspension faults lead to poor handling and tyre wear. Always inspect with the vehicle on axle stands and the wheels off the ground to check for play.",steps:[{title:'Bounce test first',desc:'Push down firmly on each corner of the car and release. The car should settle after one bounce. More than 2 bounces = worn shock absorbers.'},{title:'Check shock absorbers visually',desc:'Lift the vehicle. Look for oil streaks on the shock body = leaking = replace. Check the top mount for cracks or corrosion.'},{title:'Check ball joints',desc:'With the wheel on the ground, grab the tyre at 12 and 6 o\'clock and try to rock it. Any vertical play = worn ball joint. Have a helper rock while you watch the joint close-up.'},{title:'Check tie rod ends',desc:'Grab the tyre at 9 and 3 o\'clock and try to rock it. Horizontal play = worn tie rod end. Grip the steering rack rubber boot and feel for inner tie rod movement.'},{title:'Check wheel bearings',desc:'Spin each wheel by hand (off the ground). Roughness or growling = worn bearing. Also check for play by rocking the wheel while a helper holds the brake pedal depressed.'},{title:'Assess tyre wear patterns',desc:'Even across full tread = good. One-edge wear = alignment issue. Scalloped/cupped = shock absorbers or imbalance. Centre wear = over-inflated tyre.'}]},
+
+  susdecision:{icon:'❓',title:'Suspension Fault Symptom Guide',tools:[],newbie:"Match the symptom to the likely cause before you start inspecting to save time.",steps:[{title:'Car pulls to one side',desc:'Likely: wheel alignment out, tyre pressure difference, seized brake calliper, or worn tie rod end.'},{title:'Steering wheel vibrates at speed',desc:'Likely: wheel imbalance, worn or damaged tyre, worn wheel bearing, or worn CV joint.'},{title:'Clunking over bumps',desc:'Likely: worn anti-roll bar bushes/drop links, worn shock absorber top mount, or loose suspension bolts.'},{title:'Excessive bouncing',desc:'Likely: worn shock absorbers or struts. Especially if the car bounces more than twice after you push down on a corner.'},{title:'Uneven tyre wear',desc:'Likely: alignment fault, incorrect tyre pressures, or worn shock absorbers not maintaining proper contact.'}]},
+
+  susfault:{icon:'🔧',title:'Suspension Repair & Wheel Alignment',tools:['Torque wrench','Alignment machine','Wheel balancer','Replacement components per service data'],newbie:"Any suspension component replacement must be followed by a four-wheel alignment. Even tightening one bolt can alter wheel angles slightly.",steps:[{title:'Replace identified worn components',desc:'Ball joints, tie rod ends, shock absorbers, and bushes are most common. Always replace in axle pairs (both sides) where possible.'},{title:'Torque all bolts to specification',desc:'Under-torqued suspension bolts can work loose — a serious safety hazard. Always use a torque wrench. Never rely on feel alone.'},{title:'Set correct tyre pressures before alignment',desc:'Inflate all four tyres to the vehicle specification (door jamb sticker or fuel filler flap). Correct pressures are essential for accurate alignment.'},{title:'Four-wheel alignment',desc:"Set camber, caster, and toe to manufacturer's spec on the alignment machine. Print the before/after report and attach to the job card."},{title:'Wheel balance check',desc:'If vibration at speed was reported, balance all four wheels. Add weights until the machine reads 0g imbalance.'}]},
+
+  electrical:{icon:'💡',title:'Checking Electrical & HVAC Systems',tools:['Multimeter','Fuse puller','Spare fuses','OBD-II scanner with body/HVAC access'],newbie:"The golden rule of electrical diagnosis: check power, then check earth (ground), then check the component. Always in that order.",steps:[{title:'Visual fuse check first',desc:"Locate both fuse boxes (under bonnet + under dashboard). The lid has a fuse map. Pull suspect fuses and inspect — a blown fuse has a broken wire inside."},{title:'Test all lighting circuits',desc:'Headlights (dip and main), brake lights, reversing lights, indicators (front and rear), number plate lights, interior lights. Note any that are not working.'},{title:'Test horn, wipers, and washers',desc:'Simple circuits. If they fail: check the fuse, then the relay, then the switch, then the component itself with a direct 12V feed test.'},{title:'Test the A/C system',desc:'Set to maximum A/C. Listen for the compressor clutch engaging (a click). Air should be cold within 60 seconds. Warm air with clutch engaging = low refrigerant. No clutch click = electrical or refrigerant fault.'},{title:'Test the heater',desc:'Set to max heat. Air should be warm within 2–3 minutes of the engine reaching temperature. No heat = thermostat stuck open, heater matrix blocked, or temperature blend door fault.'},{title:'Scan HVAC and Body Control Module (BCM)',desc:'Use scanner to read all body/HVAC module codes. These catch electrical faults not visible to the eye.'}]},
+
+  electricaldecision:{icon:'❓',title:'Evaluating Electrical Faults',tools:[],newbie:"Triage electrical faults quickly using these patterns before diving into detailed wiring diagnosis.",steps:[{title:'Single item not working',desc:'Usually a fuse, relay, bulb, or switch. Check the fuse first — it is the quickest and cheapest fix.'},{title:'Multiple related items not working',desc:'If several things on the same circuit fail together — suspect a shared fuse, relay, or a broken earth (ground) connection.'},{title:'Intermittent fault',desc:'The hardest type. Try to reproduce by wiggling wiring harnesses and connectors while monitoring. Usually points to corroded connectors or chafed wiring.'},{title:'Fault codes stored',desc:'Body codes (B codes) indicate specific electronic component faults. Research each one before deciding on a repair action.'}]},
+
+  electricalfault:{icon:'🔧',title:'Tracing & Repairing Electrical Faults',tools:['Multimeter','Wiring diagram from service data','Test light','Terminal release tools'],newbie:"Never guess with electrical faults — always trace using a wiring diagram. Replacing parts without confirming the fault wastes money and rarely fixes it.",steps:[{title:'Get the wiring diagram',desc:'Look up the faulty circuit in service data. The diagram shows every connector, fuse, relay, and earth in the circuit.'},{title:'Check for power at the component',desc:'Using DC volts on your multimeter, probe the power wire at the component connector. Should read battery voltage (~12V). No voltage = fault is upstream.'},{title:'Check the earth connection',desc:'Probe between the earth wire and a known good earth (battery negative). Should read 0V. Reading battery voltage = broken earth connection.'},{title:'Check relay operation',desc:'A click when the relay activates means it is likely working. Swap it with an identical relay from another circuit to confirm. No click = faulty relay or no signal to its coil.'},{title:'A/C refrigerant service',desc:'Refrigerant recharging requires a certified refrigerant machine and R1234yf/R134a environmental training. Do not vent refrigerant to atmosphere — it is illegal. Refer this to your supervisor.',warn:'Releasing refrigerant to atmosphere is illegal and carries a significant fine. Always use the correct recovery machine.'}]},
+
+  roadtest:{icon:'🛣️',title:'Performing a Road Test',tools:["Valid driver's licence",'Hi-vis vest','Job card','Wireless OBD scanner (useful)'],newbie:"A road test confirms your diagnosis under real conditions. Always get supervisor authorisation before moving the vehicle, especially if it has a known safety fault.",steps:[{title:'Confirm the vehicle is safe to move',desc:'Tyres inflated. Wheels torqued. All panels fitted. No active fluid leaks. No safety-critical faults outstanding. If in doubt, check with your supervisor.'},{title:'Plan a short test route',desc:'5–10 minutes. Include: gentle acceleration zone, 30mph and 50mph stretch, a roundabout (for steering feel), rough road surface (for suspension noise), and a clear braking zone.'},{title:'Test each system deliberately',desc:'Acceleration: strong and smooth? Braking: straight-line, progressive, no pulling? Steering: centred, no vibration, no play? All gears: engage cleanly? Any unusual sounds?'},{title:"Try to reproduce the customer's complaint",desc:'If they said "clunks when turning left at slow speed" — do exactly that, slowly, several times. Your job is to confirm or disprove the complaint with evidence.'},{title:'Return and record your findings',desc:'Write exactly what you experienced, even if nothing was wrong. "Road test performed — no faults found / complaint could not be reproduced" is a valid and important entry.'}]},
+
+  roadtestdecision:{icon:'❓',title:'Evaluating the Road Test Result',tools:[],newbie:"Be honest in your assessment. If a fault was not reproduced but the customer is certain it exists, discuss with your supervisor before releasing the vehicle.",steps:[{title:'Fault reproduced',desc:'You experienced the same symptom the customer described. Return to the relevant diagnostic phase and investigate further. Do not release the vehicle.'},{title:'Fault not reproduced',desc:'You drove normally and experienced nothing unusual. This may mean: the repair was successful, the fault is intermittent, or it only occurs under specific conditions (e.g. cold start, or only at high speed).'},{title:'New fault found',desc:"You found something the customer didn't mention. Note it on the job card, inform the customer, and get authorisation before doing any additional work."}]},
+
+  rediagnose:{icon:'🔄',title:'How to Re-Diagnose a Persistent Fault',tools:['All previous job notes','OBD scanner'],newbie:"Returning to a fault is completely normal — it is part of the job and does not mean you failed. Approach it fresh without assumptions.",steps:[{title:'Review your previous findings',desc:'What did you check? What was the result? What did you change? Start from where you left off — do not repeat confirmed work unless re-validating a result.'},{title:'Re-scan for all codes',desc:'After any repair, re-scan all modules. New codes may have appeared, or old ones returned, pointing to a deeper root cause.'},{title:'Test adjacent systems',desc:'Engine fault? Look at fuelling AND ignition AND air intake — faults often have multiple contributing factors working together.'},{title:'Ask your supervisor or senior tech',desc:'Explain clearly: what the customer reported, what you checked, what you found, and what you have already ruled out. This is how you develop skills fastest.'}]},
+
+  report:{icon:'📄',title:'Writing a Professional Diagnosis Report',tools:['Job card','Workshop management system','Parts receipts'],newbie:"Your report is a legal document. Write it clearly, accurately, and professionally. It protects you, the customer, and the business.",steps:[{title:'List all faults found',desc:'Each fault clearly stated, referencing DTC codes if applicable. E.g. "P0301 — Cylinder 1 misfire. Confirmed faulty ignition coil via coil swap test."'},{title:'List all work carried out',desc:'E.g. "Replaced cylinder 1 ignition coil. Cleared fault codes. Road test performed — fault not reproduced."'},{title:'List all parts replaced',desc:'Include part numbers where possible. These appear on the parts receipt or system invoice.'},{title:'List advisory items',desc:'Non-urgent items to address in the future. E.g. "Front brake pads at 4mm — recommend replacement within 6 months or 6,000 miles."'},{title:'Write clearly and professionally',desc:"Avoid slang. Use complete sentences. The customer will read this. So might a solicitor or insurer if there is ever a dispute."},{title:'Get your supervisor to review it',desc:'While you are new, always have your supervisor check the report for accuracy before presenting it to the customer.'}]},
+
+  safetycheck:{icon:'🚨',title:'Identifying Safety-Critical Faults',tools:['Your inspection findings'],newbie:"Safety-critical faults are non-negotiable. The vehicle cannot leave until they are resolved. You have both a legal and moral duty to communicate these to the customer.",steps:[{title:'Brake faults',desc:'Pads below 2mm, scored rotors, leaking calliper, spongy pedal, or brake fluid leak. These directly affect stopping distance. CRITICAL — vehicle must not be driven.'},{title:'Steering faults',desc:'Worn tie rod ends, worn ball joints, excessive play in the steering column. These affect directional control. CRITICAL.'},{title:'Tyre condition',desc:'Tread below 2mm (legal limit 1.6mm — we act at 2mm). Sidewall bulge, cut, or serious cracking. Risk of sudden tyre failure at speed. CRITICAL.'},{title:'Lighting faults',desc:'Non-functioning headlights, brake lights, or indicators. MOT failures and illegal on public roads. HIGH PRIORITY.'},{title:'How to communicate this clearly',desc:'Be calm and factual. Say: "I\'ve found a safety issue with the brakes. The pads are below the safe minimum. This needs to be repaired before the vehicle can be driven safely. May I have your authorisation to proceed?"'}]},
+
+  safetyhold:{icon:'🚫',title:'Holding a Vehicle on Safety Grounds',tools:['Supervisor','Job card','Clear communication'],newbie:"This can feel like a difficult conversation — but it is your professional and legal responsibility. Your supervisor will support you fully.",steps:[{title:'Inform your supervisor first',desc:'Before speaking to the customer, tell your supervisor what you found and that you intend to hold the vehicle. They may want to be present for the conversation.'},{title:'Communicate clearly and calmly',desc:'Explain what you found, why it is dangerous, and what needs to be done. Use plain language. Show the evidence — worn pads, photos — if helpful.'},{title:'Get written authorisation to proceed',desc:'The customer must sign to authorise the safety repair. Record this on the job card.'},{title:'If the customer refuses repairs',desc:"Note their refusal on the job card and have them sign to confirm they were informed of the fault. You cannot physically stop an owner from taking their vehicle.",warn:"If a customer insists on taking an unsafe vehicle, speak to your supervisor immediately. Document everything in writing. Your documentation is your protection."}]},
+
+  release:{icon:'✅',title:'Releasing a Vehicle Professionally',tools:['Completed job card','Invoice','Keys'],newbie:"A professional handover builds customer trust. Take your time — this is the last impression you make.",steps:[{title:'Final checks before release',desc:'All wheels torqued. All tools removed from the vehicle (check the boot and footwells). No grease on the steering wheel or upholstery. No warning lights on dashboard. Fuel level same as or better than received.'},{title:"Walk the customer through the report",desc:'Explain what was found and what was done in plain language. Show replaced parts if available. Explain any advisory items clearly.'},{title:'Answer questions honestly',desc:'If you do not know the answer, say "Let me check with my supervisor and get back to you." Never guess or fabricate an answer.'},{title:"Get the customer's signature",desc:'The customer signs to confirm receipt of the vehicle and that the work was explained. This is important for the business record.'},{title:'Return the keys',desc:'Hand the keys over and show the customer to their vehicle if appropriate. Thank them.'}]},
+
+  complete:{icon:'🏁',title:'Closing the Job Professionally',tools:['Completed job card','Waste disposal bins'],newbie:"Finishing well is as important as starting well. A clean, complete job card marks you as a professional technician.",steps:[{title:'Close the job in the management system',desc:'Mark the job complete, record your technician ID and time taken. This helps the business with scheduling and billing.'},{title:'File all test printouts and receipts',desc:'Alignment reports, battery test results, scanner reports — attach to the job card or upload to the system.'},{title:'Clean your bay',desc:'Sweep the floor, return all tools to their correct locations. Dispose of waste oil, filters, and fluids in the correct marked containers. Leave it how you would want to find it.'},{title:'Debrief with your supervisor',desc:'Discuss anything you were unsure about or found interesting. Ask questions. Every job is a learning opportunity.'}]},
+
+  escalate:{icon:'📣',title:'When & How to Escalate a Fault',tools:['Your complete notes','Senior technician or supervisor'],newbie:"Knowing when to ask for help is a professional skill — not an admission of failure. All experienced technicians had to learn this.",steps:[{title:'When to escalate',desc:'You have followed the diagnostic procedure and cannot find the fault. The fault is intermittent and cannot be reproduced under any condition. The repair requires specialist equipment or training you do not yet have. The customer has become difficult.'},{title:'How to hand over properly',desc:'Give your supervisor the job card with ALL notes written up. Explain verbally: what the customer reported, what you tested, what you found, and what you have already ruled out. Show your work.'},{title:'Learn from the handover',desc:'Ask if you can observe the senior technician\'s diagnosis. Ask questions. Understand what they did differently and why. This is the fastest way to build your diagnostic skills.'},{title:'Document the escalation',desc:'Note on the job card: "Fault escalated to [name] on [date]. Reason: [brief explanation]." Keep the record complete.'}]}
+};
+
+function showHelp(key){
+  const h=H[key];if(!h)return;
+  document.getElementById('mIcon').textContent=h.icon;
+  document.getElementById('mTitle').textContent=h.title;
+  let html='';
+  if(h.newbie) html+=`<div class="newbie-alert"><span>💡</span><span>${h.newbie}</span></div>`;
+  if(h.tools&&h.tools.length){html+=`<div class="tools-section"><div class="section-label">Tools &amp; Equipment</div><div class="tools-grid">`;h.tools.forEach(t=>{html+=`<span class="tool-tag">${t}</span>`;});html+=`</div></div>`;}
+  html+=`<div class="section-label" style="margin-bottom:10px">Step-by-Step Procedure</div><ol class="steps-list">`;
+  h.steps.forEach((s,i)=>{html+=`<li class="step-item"><div class="step-circle">${i+1}</div><div class="step-content"><div class="step-title">${s.title}</div><div class="step-desc">${s.desc}</div>${s.warn?`<div class="step-warn">⚠️ ${s.warn}</div>`:''} ${s.tip?`<div class="step-tip">💡 ${s.tip}</div>`:''}</div></li>`;});
+  html+=`</ol>`;
+  if(h.specs&&h.specs.length){html+=`<div class="spec-box"><div class="section-label">Key Specifications</div>`;h.specs.forEach(s=>{html+=`<div class="spec-row"><span class="spec-key">${s.k}</span><span class="spec-val">${s.v}</span></div>`;});html+=`</div>`;}
+  document.getElementById('mBody').innerHTML=html;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('modalBox').scrollTop=0;
+}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('open');}
+function closeModalOutside(e){if(e.target===document.getElementById('modalOverlay'))closeModal();}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+</script>
+
+</body>
+</html>
